@@ -1,0 +1,105 @@
+// views/admin.html
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Admin Panel</title>
+    <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+    <div id="loginForm">
+        <h2>Professor Login</h2>
+        <input type="text" id="username" placeholder="Username">
+        <input type="password" id="password" placeholder="Password">
+        <button onclick="login()">Login</button>
+    </div>
+
+    <div id="requestsPanel" style="display: none;">
+        <h2>Pending Requests</h2>
+        <table id="requestsTable">
+            <thead>
+                <tr>
+                    <th>Student Name</th>
+                    <th>Email</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+    </div>
+
+    <script>
+        let currentProfessor = null;
+
+        async function login() {
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+
+            try {
+                const response = await fetch('/api/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, password })
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    currentProfessor = data;
+                    document.getElementById('loginForm').style.display = 'none';
+                    document.getElementById('requestsPanel').style.display = 'block';
+                    loadRequests();
+                } else {
+                    alert('Invalid credentials');
+                }
+            } catch (error) {
+                alert('Error logging in');
+            }
+        }
+
+        async function loadRequests() {
+            try {
+                const response = await fetch(`/api/requests/${currentProfessor.id}`);
+                const requests = await response.json();
+                const tbody = document.querySelector('#requestsTable tbody');
+                tbody.innerHTML = '';
+
+                requests.forEach(request => {
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td>${request.studentName}</td>
+                        <td>${request.email}</td>
+                        <td>
+                            <button onclick="approveRequest('${request._id}')">Approve</button>
+                            <button onclick="denyRequest('${request._id}')">Deny</button>
+                        </td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+            } catch (error) {
+                alert('Error loading requests');
+            }
+        }
+
+        async function approveRequest(requestId) {
+            try {
+                await fetch(`/api/requests/${requestId}/approve`, {
+                    method: 'PUT'
+                });
+                loadRequests();
+            } catch (error) {
+                alert('Error approving request');
+            }
+        }
+
+        async function denyRequest(requestId) {
+            try {
+                await fetch(`/api/requests/${requestId}`, {
+                    method: 'DELETE'
+                });
+                loadRequests();
+            } catch (error) {
+                alert('Error denying request');
+            }
+        }
+    </script>
+</body>
+</html>

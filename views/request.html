@@ -1,0 +1,78 @@
+// views/request.html
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Request Appointment</title>
+    <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+    <h1>Professor Office Hours</h1>
+    <table id="professorsTable">
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Office Hours</th>
+            </tr>
+        </thead>
+        <tbody></tbody>
+    </table>
+
+    <form id="requestForm">
+        <h2>Request an Appointment</h2>
+        <input type="text" id="studentName" placeholder="Your Name" required>
+        <input type="email" id="email" placeholder="Your Email" required>
+        <select id="professorSelect" required></select>
+        <button type="submit">Request for Appointment</button>
+    </form>
+
+    <script>
+        fetch('/api/professors')
+            .then(response => response.json())
+            .then(professors => {
+                const tbody = document.querySelector('#professorsTable tbody');
+                const select = document.querySelector('#professorSelect');
+
+                professors.forEach(professor => {
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td>${professor.name}</td>
+                        <td>${professor.officeHours}</td>
+                    `;
+                    tbody.appendChild(tr);
+
+                    const option = document.createElement('option');
+                    option.value = professor._id;
+                    option.textContent = professor.name;
+                    select.appendChild(option);
+                });
+            });
+
+        document.getElementById('requestForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const formData = {
+                studentName: document.getElementById('studentName').value,
+                email: document.getElementById('email').value,
+                professorId: document.getElementById('professorSelect').value
+            };
+
+            try {
+                const response = await fetch('/api/requests', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(formData)
+                });
+
+                if (response.ok) {
+                    alert('Request submitted successfully');
+                    e.target.reset();
+                } else {
+                    const data = await response.json();
+                    alert(data.error || 'Error submitting request');
+                }
+            } catch (error) {
+                alert('Error submitting request');
+            }
+        });
+    </script>
+</body>
+</html>

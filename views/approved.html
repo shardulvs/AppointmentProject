@@ -1,0 +1,40 @@
+// views/approved.html
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Approved Requests</title>
+    <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+    <h1>Approved Requests</h1>
+    <table id="approvedTable">
+        <thead>
+            <tr>
+                <th>Professor</th>
+                <th>Student Name</th>
+                <th>Email</th>
+                <th>Office Hours</th>
+            </tr>
+        </thead>
+        <tbody></tbody>
+    </table>
+
+    <script>
+        fetch('/api/approved-requests')
+            .then(response => response.json())
+            .then(requests => {
+                const tbody = document.querySelector('#approvedTable tbody');
+                requests.forEach(request => {
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td>${request.professor.name}</td>
+                        <td>${request.studentName}</td>
+                        <td>${request.email}</td>
+                        <td>${request.professor.officeHours}</td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+            });
+    </script>
+</body>
+</html>
